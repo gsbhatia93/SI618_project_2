@@ -1,0 +1,212 @@
+---
+title: "R Notebook"
+output: html_notebook
+author: "gsbahtia@umich.edu"
+---
+```{r}
+
+library(dplyr)
+library("RSQLite")
+library(data.table)
+library(ggplot2)
+library(reshape2)
+
+```
+
+
+```{r}
+con = dbConnect(SQLite(), dbname="/Users/gsbhatia/Desktop/pROJECT_2/world-development-indicators/database.sqlite")
+
+india <- dbGetQuery( con,'select * from Indicators where CountryCode="IND"' )
+```
+
+
+```{r}
+View(india
+     )
+```
+
+
+```{r}
+factor_list <- c("NE.GDI.TOTL.ZS", "NE.CON.GOVT.ZS" ,'NY.GDP.MKTP.KD','NY.GNP.MKTP.KD') 
+                 #'TG.VAL.TOTL.GD.ZS', 'NY.GDP.MKTP.CN','NE.DAB.TOTL.ZS', 'NE.CON.PETC.KD', "NE.CON.TETC.CN","NE.DAB.TOTL.CD","NE.EXP.GNFS.CN")
+india$IndicatorCode <- as.factor(india$IndicatorCode)
+
+#india2 only has the required specific columns
+india2 <- india[india$IndicatorCode %in% factor_list,]
+
+```
+
+
+```{r}
+
+#unique(india$IndicatorCode)
+#india2 %>% group_by(IndicatorCode) %>% summarise()
+count1 <- india2 %>% 
+  group_by(IndicatorCode) %>% 
+  summarise(avg_count = n())
+
+```
+
+
+```{r}
+arrange(count1, desc(avg_count))
+```
+
+
+```{r}
+india2 <- as.data.table(india2)
+#cols<- c("Value")
+#india2 <- india2[, (cols) := lapply(.SD, function(x) (x-mean(x))/sd(x) ),.SDcols = cols ]
+```
+
+```{r}
+head(india2)
+
+```
+
+
+
+```{r}
+india2[IndicatorCode== "NE.CON.GOVT.ZS"]$Value
+```
+
+
+```{r}
+# dt has makes column out of indicatorCode values and hence creates a valid format for PCA
+dt <- data.table()
+
+v1 <- list(india2[IndicatorCode=="NE.GDI.TOTL.ZS"]$Value)
+dt[, factor_list[1]:= v1]
+v2 <- list(india2[IndicatorCode==factor_list[2]]$Value)
+dt[, factor_list[2]:= v2]
+
+v2 <- list(india2[IndicatorCode==factor_list[3]]$Value)
+dt[, factor_list[3]:= v2]
+
+v2 <- list(india2[IndicatorCode==factor_list[4]]$Value)
+dt[, factor_list[4]:= v2]
+
+# set year
+v2 <- list(india2[IndicatorCode==factor_list[4]]$Year)
+dt[, Year:= v2]
+
+
+v2 <- list(india2[IndicatorCode==factor_list[5]]$Value)
+dt[, factor_list[5]:= v2]
+
+v2 <- list(india2[IndicatorCode==factor_list[6]]$Value)
+dt[, factor_list[6]:= v2]
+
+v2 <- list(india2[IndicatorCode==factor_list[7]]$Value)
+dt[, factor_list[7]:= v2]
+
+v2 <- list(india2[IndicatorCode==factor_list[8]]$Value)
+dt[, factor_list[8]:= v2]
+
+v2 <- list(india2[IndicatorCode==factor_list[9]]$Value)
+dt[, factor_list[9]:= v2]
+
+v2 <- list(india2[IndicatorCode==factor_list[10]]$Value)
+dt[, factor_list[10]:= v2]
+
+v2 <- list(india2[IndicatorCode==factor_list[11]]$Value)
+dt[, factor_list[11]:= v2]
+
+
+```
+
+
+```{r}
+head(dt)
+
+```
+
+
+```{r}
+cols<- factor_list
+
+dt<- dt[, (cols) := lapply(.SD, function(x) (x-mean(x))/sd(x) ),.SDcols = cols ]
+
+```
+
+
+```{r}
+head(dt)
+```
+
+
+```{r}
+dt_melt <- melt(dt,id.vars="Year")
+head(dt_melt)
+```
+
+
+```{r}
+ggplot(dt_melt, aes(Year,value, col=variable)) + 
+  geom_point()  
+
+```
+
+```{r}
+pca.india <- prcomp(x = dt[,1:4], scale = TRUE, center = TRUE)
+summary(pca.india)
+```
+
+
+```{r}
+pr.iris <- pca.india
+#1. The standard deviations:
+pr.var = pr.iris$sdev^2
+pve = 100 * (pr.var / sum(pr.var))
+perc_data = data.table(percent=pve, PC=1:length(pve))
+ggplot(perc_data, aes(x=PC, y=percent)) + 
+  geom_line() +
+  geom_text(aes(label=round(percent, 2)), size=4, vjust=-.5) +
+  ylab("Proportion of Variance Explained\n") +
+  xlab("Principle Component")
+
+```
+
+
+```{r}
+
+#2. The data
+pr.iris$x #this data does not give us the categories, we can add them
+pca_data <- data.frame(pr.iris$x, Species=dt_melt$variable)
+
+
+#We can use this to inspect the PC1 and 2 across species
+ggplot(pca_data, aes(x=PC1, y=PC2, color=Species)) + geom_point()
+#How about PC2 and PC3?
+ggplot(pca_data, aes(x=PC2, y=PC3, color=Species)) + geom_point()
+
+```
+
+
+```{r}
+#You can simply create this using biplot as well 
+biplot(pr.iris)
+
+```
+
+
+```{r}
+
+#3. The rotation matrix.
+pr.iris$rotation
+rotation_data <- data.table(pr.iris$rotation, variable=row.names(pr.iris$rotation))
+ggplot(rotation_data) + 
+  geom_segment(aes(xend=PC1, yend=PC2), x=0, y=0, arrow=arrow(length = unit(0.05, "inches"), type = "closed")) + 
+  geom_text(aes(x=PC1, y=PC2, label=variable), hjust=0, size=3, color='red') + 
+  xlim(-1.,1) + 
+  ylim(-1.,1.)
+# do the factors corresponding to PC1 direction most important to me?
+# i want to reduce dimension and then create regression to plot?
+```
+
+
+```{r}
+```
+
+

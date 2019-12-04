@@ -1,0 +1,108 @@
+---
+title: "R Notebook"
+output: html_notebook
+author: "gurpreet singh bhatia, gsbhatia@umich.edu"
+---
+
+# Research Question 2: how do development indicators for Urban and Rural areas compare in India
+# avergaing out using the total nominal indicator for India
+```{r}
+
+library(dplyr)
+library("RSQLite")
+library(data.table)
+library(ggplot2)
+library(reshape2)
+
+```
+
+
+```{r}
+# read data for India from the sqldb
+con = dbConnect(SQLite(), dbname="/Users/gsbhatia/Desktop/pROJECT_2/world-development-indicators/database.sqlite")
+
+india <- dbGetQuery( con,'select * from Indicators where CountryCode="IND"' )
+
+```
+['rural poverty headcount ratio at national poverty lines % of rural population' 'SI.POV.RUHC']
+
+['urban poverty headcount ratio at national poverty lines % of urban population'  'SI.POV.URHC']
+ 
+ ['rural poverty gap at national poverty lines %' 'SI.POV.RUGP']
+ 
+ ['urban poverty gap at national poverty lines %' 'SI.POV.URGP']
+ 
+ 
+ Poverty gap at national poverty lines (%)	SI.POV.NAGP
+
+```{r}
+factor_list_r2 <- c('SI.POV.RUGP', 'SI.POV.URGP', 'SI.POV.NAGP')
+
+india$IndicatorCode <- as.factor(india$IndicatorCode)
+
+#india2 only has the required specific columns
+india_r2 <- india[india$IndicatorCode %in% factor_list_r2,]
+
+```
+
+
+```{r}
+india_r2 <- as.data.table(india_r2)
+head(india_r2)
+
+```
+
+
+```{r}
+dt <- data.table()
+
+v2 <- list(india_r2[IndicatorCode==factor_list_r2[1]]$Value)
+dt[, factor_list_r2[1]:= v2]
+
+v2 <- list(india_r2[IndicatorCode==factor_list_r2[2]]$Value)
+dt[, factor_list_r2[2]:= v2]
+
+v2 <- list(india_r2[IndicatorCode==factor_list_r2[3]]$Value)
+dt[, factor_list_r2[3]:= v2]
+
+# set year
+v2 <- list(india_r2[IndicatorCode==factor_list_r2[3]]$Year)
+dt[, Year:= v2]
+
+
+```
+
+
+```{r}
+head(dt)
+```
+
+
+```{r}
+
+dt_melt <- melt(dt,id.vars="Year")
+head(dt_melt)
+
+```
+
+
+```{r}
+
+ggplot(dt_melt, aes(Year,value, col=variable)) + 
+  geom_line()  
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
