@@ -1,0 +1,221 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+---
+
+Research Question #3
+Cluster evolution on GDP values across the years
+
+```{r}
+library(dplyr)
+library("RSQLite")
+library(data.table)
+library(ggplot2)
+library(reshape2)
+```
+
+
+```{r}
+# indicator list I will work with
+
+factor_list <- c( "NY.GDP.MKTP.KD",
+                   "TG.VAL.TOTL.GD.ZS",
+                   "NE.CON.GOVT.ZS", 
+                   "NY.GNP.MKTP.KD", 
+                  "NV.IND.MANF.ZS",
+                 "NE.CON.GOVT.CN")
+
+con = dbConnect(SQLite(), dbname="/Users/gsbhatia/Desktop/pROJECT_2/world-development-indicators/database.sqlite")
+gdp_unfiltered <- dbGetQuery( con,'select * from Indicators ' )
+gdp <- filter(gdp_unfiltered, IndicatorCode %in% factor_list)
+nrow(gdp_unfiltered)
+nrow(gdp)
+
+# select India data to be added on later to the random subset
+
+# india_gdp <- dbGetQuery( con,'select * from Indicators where IndicatorCode= "NY.GDP.MKTP.KD" and CountryCode= "IND" ' )
+india_gdp <- filter(gdp, CountryCode=="IND")
+
+```
+```{r}
+
+sum(is.na(gdp_unfiltered$Value))
+
+```
+
+
+```{r}
+# filter a random subset of the countries I need
+
+country_list <- sample(gdp$CountryCode, 200)
+gdp2 <- filter(gdp, CountryCode %in% country_list)
+gdp2 <- rbind( gdp2, india_gdp)
+
+# gdp2 <- gdp2 %>% group_by(CountryCode)
+gdp_dt <- as.data.table(gdp2)
+
+gdp_dt
+```
+
+```{r}
+
+dt <- data.table()
+
+v1 <- list(gdp_dt[IndicatorCode=="NY.GDP.MKTP.KD"]$Value)
+dt[, mkt_gdp:= v1]
+
+# set year
+v2 <- list(gdp_dt[IndicatorCode=="NY.GDP.MKTP.KD"]$Year)
+dt[, Year:= v2]
+
+# set CountryCode
+v2 <- list(gdp_dt[IndicatorCode=="NY.GDP.MKTP.KD"]$CountryCode)
+dt[, CountryCode:= v2]
+
+# factor == 2
+dt2 <- data.table()
+v1 <- list(gdp_dt[IndicatorCode==factor_list[2]]$Value)
+dt2[, tg:= v1]
+
+# set year
+v2 <- list(gdp_dt[IndicatorCode==factor_list[2]]$Year)
+dt2[, Year:= v2]
+
+# set CountryCode
+v2 <- list(gdp_dt[IndicatorCode==factor_list[2]]$CountryCode)
+dt2[, CountryCode:= v2]
+# merge to the original one
+dt <- merge(dt , dt2,by=c("Year","CountryCode")) 
+
+
+# factor == 3
+dt2 <- data.table()
+v1 <- list(gdp_dt[IndicatorCode==factor_list[3]]$Value)
+dt2[, ne:= v1]
+
+# set year
+v2 <- list(gdp_dt[IndicatorCode==factor_list[3]]$Year)
+dt2[, Year:= v2]
+
+# set CountryCode
+v2 <- list(gdp_dt[IndicatorCode==factor_list[3]]$CountryCode)
+dt2[, CountryCode:= v2]
+# merge to the original one
+dt <- merge(dt , dt2,by=c("Year","CountryCode")) 
+
+
+# factor == 4
+dt2 <- data.table()
+v1 <- list(gdp_dt[IndicatorCode==factor_list[4]]$Value)
+dt2[, consumption:= v1]
+
+# set year
+v2 <- list(gdp_dt[IndicatorCode==factor_list[4]]$Year)
+dt2[, Year:= v2]
+
+# set CountryCode
+v2 <- list(gdp_dt[IndicatorCode==factor_list[4]]$CountryCode)
+dt2[, CountryCode:= v2]
+# merge to the original one
+dt <- merge(dt , dt2,by=c("Year","CountryCode")) 
+
+
+```
+
+
+```{r}
+
+cols <- c("mkt_gdp", "consumption")
+
+dt <-  as.data.table(dt) 
+dt <-  dt[, (cols) := lapply(.SD, function(x) log(x,10) ), .SDcols = cols ]
+dt
+
+```
+
+
+```{r}
+
+dt1960 <- filter(dt, Year==1998)
+dt1980 <- filter(dt, Year==2000)
+dt2000 <- filter(dt, Year==2005)
+dt2010 <- filter(dt, Year==2010)
+
+nrow(dt1960)
+nrow(dt1980)
+nrow(dt2000)
+nrow(dt2010)
+dt2010
+
+```
+
+
+```{r}
+
+cols <- c("mkt_gdp", "consumption")
+
+country_cluster_60 <- kmeans(dt1960[, 6], 5, nstart = 20)
+country_cluster_80 <- kmeans(dt1980[, 6], 5, nstart = 20)
+country_cluster_00 <- kmeans(dt2000[, 6], 5, nstart = 20)
+country_cluster_10 <- kmeans(dt2010[, 6], 5, nstart = 20)
+
+country_cluster_10
+
+```
+
+
+```{r}
+
+dt1960$cluster_code <- country_cluster_60$cluster
+dt1980$cluster_code <- country_cluster_80$cluster
+dt2000$cluster_code <- country_cluster_00$cluster
+
+dt2010$cluster_code <- country_cluster_10$cluster
+dt2010
+
+```
+
+
+```{r}
+
+median(dt2010$mkt_gdp)
+
+dt1960$cluster_code <- as.factor(dt1960$cluster_code) 
+dt1980$cluster_code <- as.factor(dt1980$cluster_code) 
+dt2000$cluster_code <- as.factor(dt2000$cluster_code) 
+dt2010$cluster_code <- as.factor(dt2010$cluster_code) 
+dtplot <- filter(dt2010 , cluster_code==1) 
+ggplot(dtplot, aes(x = ne, y=mkt_gdp, color=CountryCode, label=CountryCode)) + geom_point() + geom_text(check_overlap = TRUE)
+  
+```
+
+
+```{r}
+
+dtplot <- filter(dt2000 , cluster_code==4) 
+ggplot(dtplot, aes(x = ne, y=mkt_gdp, color=CountryCode, label=CountryCode)) + geom_point() + geom_text(check_overlap = TRUE)
+
+```
+
+
+```{r}
+
+dtplot <- filter(dt1980, cluster_code==3) 
+ggplot(dtplot, aes(x = ne, y=mkt_gdp, color=CountryCode, label=CountryCode)) + geom_point() + geom_text(check_overlap = TRUE)
+
+```
+
+
+```{r}
+
+dtplot <- filter(dt1960, cluster_code==2) 
+ggplot(dtplot, aes(x = ne, y=mkt_gdp, color=CountryCode, label=CountryCode)) + geom_point() + geom_text(check_overlap = TRUE)
+
+```
+
+
+```{r}
+```
+

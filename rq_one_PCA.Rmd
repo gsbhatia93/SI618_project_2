@@ -50,7 +50,12 @@ count1 <- india2 %>%
 
 
 ```{r}
-arrange(count1, desc(avg_count))
+#arrange(count1, desc(avg_count))
+
+count2 <- india %>% group_by(IndicatorCode) %>% summarise(avg_count = n())
+
+filter(arrange(count2), IndicatorCode=="NE.CON.GOVT.CN")
+#arrange(count2, desc(avg_count))
 ```
 
 
@@ -78,6 +83,7 @@ dt <- data.table()
 
 v1 <- list(india2[IndicatorCode=="NE.GDI.TOTL.ZS"]$Value)
 dt[, factor_list[1]:= v1]
+
 v2 <- list(india2[IndicatorCode==factor_list[2]]$Value)
 dt[, factor_list[2]:= v2]
 
