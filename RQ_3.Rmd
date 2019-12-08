@@ -47,8 +47,8 @@ sum(is.na(gdp_unfiltered$Value))
 
 
 ```{r}
-# filter a random subset of the countries I need
 
+# filter a random subset of the countries I need
 country_list <- sample(gdp$CountryCode, 200)
 gdp2 <- filter(gdp, CountryCode %in% country_list)
 gdp2 <- rbind( gdp2, india_gdp)

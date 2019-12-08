@@ -18,91 +18,242 @@ library(reshape2)
 
 
 ```{r}
+
 # read data for India from the sqldb
 con = dbConnect(SQLite(), dbname="/Users/gsbhatia/Desktop/pROJECT_2/world-development-indicators/database.sqlite")
 
-india <- dbGetQuery( con,'select * from Indicators where CountryCode="IND"' )
+india <- dbGetQuery( con, 'select * from Indicators where CountryCode="IND" ')
 
 ```
-['rural poverty headcount ratio at national poverty lines % of rural population' 'SI.POV.RUHC']
+c('SP.RUR.TOTL', 'SP.RUR.TOTL.ZS','SP.RUR.TOTL.ZG','SI.POV.RUHC','EG.ELC.ACCS.RU.ZS','SH.STA.ACSN.RU','SH.H2O.SAFE.RU.ZS','SI.POV.RUGP','SP.REG.BRTH.RU.ZS','EG.NSF.ACCS.RU.ZS')
+ 
+['access to electricity urban % of urban population' 'EG.ELC.ACCS.UR.ZS']
+['improved sanitation facilities urban % of urban population with access' 'SH.STA.ACSN.UR']
+['improved water source urban % of urban population with access' 'SH.H2O.SAFE.UR.ZS']
+['urban poverty gap at national poverty lines %' 'SI.POV.URGP']
+['completeness of birth registration urban %' 'SP.REG.BRTH.UR.ZS']
+['access to non to solid fuel urban % of urban population'  'EG.NSF.ACCS.UR.ZS']
 
-['urban poverty headcount ratio at national poverty lines % of urban population'  'SI.POV.URHC']
  
- ['rural poverty gap at national poverty lines %' 'SI.POV.RUGP']
- 
- ['urban poverty gap at national poverty lines %' 'SI.POV.URGP']
- 
- 
- Poverty gap at national poverty lines (%)	SI.POV.NAGP
-
 ```{r}
-factor_list_r2 <- c('SI.POV.RUGP', 'SI.POV.URGP', 'SI.POV.NAGP')
+
+rural_list <- c("SP.RUR.TOTL", "SP.RUR.TOTL.ZG", "SP.RUR.TOTL.ZS")
+urban_list <- c("SP.URB.TOTL", "SP.URB.GROW", "SP.URB.TOTL.IN.ZS")
 
 india$IndicatorCode <- as.factor(india$IndicatorCode)
 
+rural <- india[india$IndicatorCode %in% rural_list, ]
+urban <- india[india$IndicatorCode %in% urban_list, ]
+rural
+
+```
+
+
+```{r}
+
+rural <- as.data.table(rural)
+urban <- as.data.table(urban)
+
+count1 <- urban %>% 
+  group_by(IndicatorCode) %>% 
+  summarise(avg_count = n())
+arrange(count1 , desc(avg_count))
+
+```
+
+
+```{r}
+```
+
+
+```{r}
+filter(rural, IndicatorCode=="SP.RUR.TOTL.ZS")
+```
+
+
+```{r}
+```
+
+
+```{r}
+
+dt <- data.table()
+rural <- as.data.table(rural)
+
+v1 <- list(rural[IndicatorCode==rural_list[1]]$Value)
+dt[, total:= v1]
+
+# set year
+v2 <- list(rural[IndicatorCode==rural_list[1]]$Year)
+dt[, year:= v2]
+
+# factor == 2
+dt2 <- data.table()
+v1 <- list(rural[IndicatorCode==rural_list[2]]$Value)
+dt2[, pop_growth:= v1]
+
+# set year
+v2 <- list(rural[IndicatorCode==rural_list[2]]$Year)
+dt2[, year:= v2]
+
+# merge to the original one
+dt <- merge(dt , dt2,by=c("year")) 
+
+# factor == 3
+dt2 <- data.table()
+v1 <- list(rural[IndicatorCode==rural_list[3]]$Value)
+dt2[, pop_perc:= v1]
+
+# set year
+v2 <- list(rural[IndicatorCode==rural_list[3]]$Year)
+dt2[, year:= v2]
+
+# merge to the original one
+dt <- merge(dt , dt2,by=c("year")) 
+
+dt
+
+```
+
+
+```{r}
+
+# dt_melt <- melt(dt,id.vars="Year")
+# head(dt_melt)
+# ggplot(dt_melt, aes(Year,value, col=variable)) + 
+#  geom_line()  
+
+```
+
+
+```{r}
+
+ggplot(dt, aes(x=year, y=pop_perc)) + geom_point()
+
+```
+```{r}
+filter(urban, IndicatorCode=="SP.URB.TOTL.IN.ZS")
+```
+
+
+```{r}
+
+dtu <- data.table()
+urban <- as.data.table(urban)
+
+v1 <- list(urban[IndicatorCode==urban_list[1]]$Value)
+dtu[, ur_total:= v1]
+
+# set year
+v2 <- list(urban[IndicatorCode==urban_list[1]]$Year)
+dtu[, year:= v2]
+
+# factor == 2
+dt2 <- data.table()
+v1 <- list(urban[IndicatorCode==urban_list[2]]$Value)
+dtu[, ur_pop_growth:= v1]
+
+# set year
+v2 <- list(urban[IndicatorCode==urban_list[2]]$Year)
+dt2[, year:= v2]
+
+# merge to the original one
+dtu <- merge(dtu , dt2,by=c("year")) 
+
+# factor == 3
+dt2 <- data.table()
+v1 <- list(urban[IndicatorCode==urban_list[3]]$Value)
+dt2[, ur_pop_perc:= v1]
+
+# set year
+v2 <- list(urban[IndicatorCode==urban_list[3]]$Year)
+dt2[, year:= v2]
+
+# merge to the original one
+dtu <- merge(dtu , dt2,by=c("year")) 
+dtu
+
+```
+
+
+```{r}
+
+merge(dt, dtu, by=c("year"))
+
+
+```
+
+
+```{r}
+ggplot()+  geom_point(data=dt, aes(x=year, y=pop_perc,color='lightblue')) +geom_point(data=dtu, aes(x=year, y=ur_pop_perc, color='red'))
+
+```
+
+
+```{r}
+
+factor_list_r2 <- c('SH.H2O.SAFE.RU.ZS', 'SH.H2O.SAFE.UR.ZS')
+india$IndicatorCode <- as.factor(india$IndicatorCode)
 #india2 only has the required specific columns
 india_r2 <- india[india$IndicatorCode %in% factor_list_r2,]
 
-```
-
-
-```{r}
 india_r2 <- as.data.table(india_r2)
-head(india_r2)
+india_r2
 
+
+```
+
+```{r}
+ggplot(india_r2, aes(x = Year, y = Value, color = IndicatorName)) + geom_point()
 ```
 
 
 ```{r}
+
 dt <- data.table()
 
 v2 <- list(india_r2[IndicatorCode==factor_list_r2[1]]$Value)
-dt[, factor_list_r2[1]:= v2]
+dt[, ru_h2o:= v2]
 
 v2 <- list(india_r2[IndicatorCode==factor_list_r2[2]]$Value)
-dt[, factor_list_r2[2]:= v2]
-
-v2 <- list(india_r2[IndicatorCode==factor_list_r2[3]]$Value)
-dt[, factor_list_r2[3]:= v2]
+dt[, ur_h2o:= v2]
 
 # set year
 v2 <- list(india_r2[IndicatorCode==factor_list_r2[3]]$Year)
 dt[, Year:= v2]
 
+```
+
+
+```{r}
+f1 <- c('SP.RUR.TOTL', 'SP.RUR.TOTL.ZS','SP.RUR.TOTL.ZG','SI.POV.RUHC','EG.ELC.ACCS.RU.ZS','SH.STA.ACSN.RU','SH.H2O.SAFE.RU.ZS','SI.POV.RUGP','SP.REG.BRTH.RU.ZS','EG.NSF.ACCS.RU.ZS')
+
+t1 <- india[india$IndicatorCode %in% f1, ]
+
+count1 <- t1 %>% 
+  group_by(IndicatorCode) %>% 
+  summarise(avg_count = n())
+arrange(count1 , desc(avg_count))
+```
+
+
+```{r}
+dt$Year <- list(india_r2$Year[india_r2$IndicatorCode=='SH.H2O.SAFE.RU.ZS'])
+```
+
+
+```{r}
+dt
+```
+
+```{r}
+
+ggplot()+  geom_point(data=dt, aes(x=year, y=ru_h2o,color='lightblue')) +geom_point(data=dt, aes(x=year, y=ru_h2o, color='red'))
 
 ```
 
 
 ```{r}
-head(dt)
 ```
 
-
-```{r}
-
-dt_melt <- melt(dt,id.vars="Year")
-head(dt_melt)
-
-```
-
-
-```{r}
-
-ggplot(dt_melt, aes(Year,value, col=variable)) + 
-  geom_line()  
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
 
