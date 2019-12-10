@@ -10,26 +10,133 @@ library("RSQLite")
 library(data.table)
 library(ggplot2)
 library(reshape2)
+library(moderndive)
 
 ```
+['gross capital formation % of gdp' 'NE.GDI.TOTL.ZS']
+['general government final consumption expenditure % of gdp' NE.CON.GOVT.ZS']
+['gdp at market prices constant 2005 us$' 'NY.GDP.MKTP.KD']
+['exports of goods and services current lcu' 'NE.EXP.GNFS.CN']
+['merchandise trade % of gdp' 'TG.VAL.TOTL.GD.ZS']
+['employment to population ratio ages 15 to 24 male % modeled ilo estimate''SL.EMP.1524.SP.MA.ZS']
+
 
 
 ```{r}
+
 con = dbConnect(SQLite(), dbname="/Users/gsbhatia/Desktop/pROJECT_2/world-development-indicators/database.sqlite")
-
 india <- dbGetQuery( con,'select * from Indicators where CountryCode="IND"' )
+
 ```
 
 
 ```{r}
-View(india
-     )
+
+factor_list_2 <- c('SL.EMP.TOTL.SP.FE.NE.ZS',
+ 'SL.EMP.TOTL.SP.MA.NE.ZS',
+ 'SL.EMP.TOTL.SP.NE.ZS',
+ 'SL.EMP.1524.SP.FE.NE.ZS',
+ 'SL.EMP.1524.SP.MA.NE.ZS',
+ 'SL.EMP.1524.SP.NE.ZS',
+ 'SL.UEM.1524.FE.NE.ZS',
+ 'SL.UEM.1524.MA.NE.ZS',
+ 'SL.UEM.1524.NE.ZS',
+ 'SL.GDP.PCAP.EM.KD',
+ 'SL.UEM.TOTL.NE.ZS',
+ 'SL.FAM.WORK.FE.ZS',
+ 'SL.FAM.WORK.MA.ZS',
+ 'SL.FAM.WORK.ZS',
+ 'SL.AGR.EMPL.ZS',
+ 'SL.AGR.EMPL.FE.ZS',
+ 'SL.AGR.EMPL.MA.ZS',
+ 'SL.IND.EMPL.ZS',
+ 'SL.IND.EMPL.FE.ZS',
+ 'SL.IND.EMPL.MA.ZS',
+ 'SL.SRV.EMPL.ZS',
+ 'SL.SRV.EMPL.FE.ZS',
+ 'SL.SRV.EMPL.MA.ZS',
+ 'SL.UEM.LTRM.ZS',
+ 'SL.UEM.LTRM.FE.ZS',
+ 'SL.UEM.LTRM.MA.ZS',
+ 'SL.EMP.SELF.FE.ZS',
+ 'SL.EMP.SELF.MA.ZS',
+ 'SL.EMP.SELF.ZS',
+ 'SL.UEM.TOTL.FE.NE.ZS',
+ 'SL.UEM.TOTL.MA.NE.ZS',
+ 'SL.EMP.WORK.FE.ZS',
+ 'SL.EMP.WORK.ZS',
+ 'SL.EMP.WORK.MA.ZS',
+ 'SL.TLF.PART.FE.ZS',
+ 'SL.TLF.PART.TL.FE.ZS',
+ 'SL.TLF.PART.MA.ZS',
+ 'SL.TLF.PART.ZS',
+ 'SL.UEM.PRIM.ZS',
+ 'SL.UEM.PRIM.FE.ZS',
+ 'SL.UEM.PRIM.MA.ZS',
+ 'SL.UEM.SECO.ZS',
+ 'SL.UEM.SECO.FE.ZS',
+ 'SL.UEM.SECO.MA.ZS',
+ 'SL.UEM.TERT.ZS',
+ 'SL.UEM.TERT.FE.ZS',
+ 'SL.UEM.TERT.MA.ZS',
+ 'SL.EMP.MPYR.ZS',
+ 'SL.EMP.VULN.ZS',
+ 'SL.EMP.MPYR.FE.ZS',
+ 'SL.EMP.MPYR.MA.ZS',
+ 'SL.EMP.VULN.FE.ZS',
+ 'SL.EMP.VULN.MA.ZS',
+ 'SL.EMP.INSV.FE.ZS',
+ 'SL.EMP.TOTL.SP.FE.ZS',
+ 'SL.EMP.TOTL.SP.MA.ZS',
+ 'SL.EMP.TOTL.SP.ZS',
+ 'SL.EMP.1524.SP.FE.ZS',
+ 'SL.EMP.1524.SP.MA.ZS',
+ 'SL.EMP.1524.SP.ZS',
+ 'SL.UEM.TOTL.FE.ZS',
+ 'SL.UEM.TOTL.MA.ZS',
+ 'SL.UEM.TOTL.ZS',
+ 'SL.UEM.1524.FE.ZS',
+ 'SL.UEM.1524.MA.ZS',
+ 'SL.UEM.1524.ZS',
+ 'SL.TLF.0714.FE.ZS',
+ 'SL.TLF.0714.MA.ZS',
+ 'SL.TLF.0714.SW.ZS',
+ 'SL.TLF.0714.SW.FE.ZS',
+ 'SL.TLF.0714.SW.MA.ZS',
+ 'SL.TLF.0714.ZS',
+ 'SL.TLF.0714.WK.ZS',
+ 'SL.TLF.0714.WK.FE.ZS',
+ 'SL.TLF.0714.WK.MA.ZS',
+ 'SL.UEM.NEET.FE.ZS',
+ 'SL.UEM.NEET.MA.ZS',
+ 'SL.UEM.NEET.ZS',
+ 'SL.AGR.0714.ZS',
+ 'SL.AGR.0714.FE.ZS',
+ 'SL.AGR.0714.MA.ZS',
+ 'SL.MNF.0714.ZS',
+ 'SL.MNF.0714.FE.ZS',
+ 'SL.MNF.0714.MA.ZS',
+ 'SL.SRV.0714.ZS',
+ 'SL.SRV.0714.FE.ZS',
+ 'SL.SRV.0714.MA.ZS',
+ 'SL.SLF.0714.ZS',
+ 'SL.SLF.0714.FE.ZS',
+ 'SL.SLF.0714.MA.ZS',
+ 'SL.FAM.0714.ZS',
+ 'SL.FAM.0714.FE.ZS',
+ 'SL.FAM.0714.MA.ZS',
+ 'SL.WAG.0714.ZS',
+ 'SL.WAG.0714.FE.ZS',
+ 'SL.WAG.0714.MA.ZS',
+ 'per_lm_alllm.adq_pop_tot')
+
+
 ```
 
 
 ```{r}
-factor_list <- c("NE.GDI.TOTL.ZS", "NE.CON.GOVT.ZS" ,'NY.GDP.MKTP.KD','NY.GNP.MKTP.KD') 
-                 #'TG.VAL.TOTL.GD.ZS', 'NY.GDP.MKTP.CN','NE.DAB.TOTL.ZS', 'NE.CON.PETC.KD', "NE.CON.TETC.CN","NE.DAB.TOTL.CD","NE.EXP.GNFS.CN")
+factor_list <- c("NE.GDI.TOTL.ZS", "NE.CON.GOVT.ZS" ,'NY.GDP.MKTP.KD', "NE.EXP.GNFS.CN", "TG.VAL.TOTL.GD.ZS" ,'SL.EMP.1524.SP.MA.ZS') 
+factor_list_pca <- c("NE.GDI.TOTL.ZS", "NE.CON.GOVT.ZS" ,'NY.GDP.MKTP.KD', "NE.EXP.GNFS.CN", "TG.VAL.TOTL.GD.ZS") 
 india$IndicatorCode <- as.factor(india$IndicatorCode)
 
 #india2 only has the required specific columns
@@ -52,10 +159,10 @@ count1 <- india2 %>%
 ```{r}
 #arrange(count1, desc(avg_count))
 
-count2 <- india %>% group_by(IndicatorCode) %>% summarise(avg_count = n())
+count2 <- india2 %>% group_by(IndicatorCode) %>% summarise(avg_count = n())
 
-filter(arrange(count2), IndicatorCode=="NE.CON.GOVT.CN")
-#arrange(count2, desc(avg_count))
+#filter(arrange(count2), IndicatorCode=="NE.CON.GOVT.CN")
+arrange(count2, desc(avg_count))
 ```
 
 
@@ -66,7 +173,7 @@ india2 <- as.data.table(india2)
 ```
 
 ```{r}
-head(india2)
+
 
 ```
 
@@ -78,59 +185,49 @@ india2[IndicatorCode== "NE.CON.GOVT.ZS"]$Value
 
 
 ```{r}
+
 # dt has makes column out of indicatorCode values and hence creates a valid format for PCA
 dt <- data.table()
 
 v1 <- list(india2[IndicatorCode=="NE.GDI.TOTL.ZS"]$Value)
-dt[, factor_list[1]:= v1]
+dt[, gross_cap_gdp := v1]
 
 v2 <- list(india2[IndicatorCode==factor_list[2]]$Value)
-dt[, factor_list[2]:= v2]
+dt[, gross_consumption := v2]
+
 
 v2 <- list(india2[IndicatorCode==factor_list[3]]$Value)
-dt[, factor_list[3]:= v2]
+dt[, gdp_at_market_prices:= v2]
 
 v2 <- list(india2[IndicatorCode==factor_list[4]]$Value)
-dt[, factor_list[4]:= v2]
+dt[, export_lcu:= v2]
+
+v2 <- list(india2[IndicatorCode==factor_list[4]]$Value)
+dt[, merchandise_gdp := v2]
 
 # set year
 v2 <- list(india2[IndicatorCode==factor_list[4]]$Year)
 dt[, Year:= v2]
 
-
-v2 <- list(india2[IndicatorCode==factor_list[5]]$Value)
-dt[, factor_list[5]:= v2]
-
-v2 <- list(india2[IndicatorCode==factor_list[6]]$Value)
-dt[, factor_list[6]:= v2]
-
-v2 <- list(india2[IndicatorCode==factor_list[7]]$Value)
-dt[, factor_list[7]:= v2]
-
-v2 <- list(india2[IndicatorCode==factor_list[8]]$Value)
-dt[, factor_list[8]:= v2]
-
-v2 <- list(india2[IndicatorCode==factor_list[9]]$Value)
-dt[, factor_list[9]:= v2]
-
-v2 <- list(india2[IndicatorCode==factor_list[10]]$Value)
-dt[, factor_list[10]:= v2]
-
-v2 <- list(india2[IndicatorCode==factor_list[11]]$Value)
-dt[, factor_list[11]:= v2]
+# will create model later on for working on this
+# this will involve a linear model for doing stuff
+#v2 <- list(india2[IndicatorCode==factor_list[6]]$Value)
+#dt[, employment := v2]
 
 
 ```
 
 
 ```{r}
-head(dt)
+
+dt
 
 ```
 
 
 ```{r}
-cols<- factor_list
+
+cols <- names(dt)[1:5] 
 
 dt<- dt[, (cols) := lapply(.SD, function(x) (x-mean(x))/sd(x) ),.SDcols = cols ]
 
@@ -138,33 +235,42 @@ dt<- dt[, (cols) := lapply(.SD, function(x) (x-mean(x))/sd(x) ),.SDcols = cols ]
 
 
 ```{r}
-head(dt)
+
+dt
+
+
 ```
 
 
 ```{r}
+
 dt_melt <- melt(dt,id.vars="Year")
-head(dt_melt)
+nrow(dt_melt)
+
 ```
 
 
 ```{r}
+
 ggplot(dt_melt, aes(Year,value, col=variable)) + 
   geom_point()  
 
 ```
 
 ```{r}
-pca.india <- prcomp(x = dt[,1:4], scale = TRUE, center = TRUE)
-summary(pca.india)
+
+pca_india <- prcomp(x = dt[,1:5], scale = TRUE, center = TRUE)
+pca_india
+
 ```
 
 
 ```{r}
-pr.iris <- pca.india
+
 #1. The standard deviations:
-pr.var = pr.iris$sdev^2
-pve = 100 * (pr.var / sum(pr.var))
+pr_var = pca_india$sdev^2
+
+pve = 100 * (pr_var / sum(pr_var))
 perc_data = data.table(percent=pve, PC=1:length(pve))
 ggplot(perc_data, aes(x=PC, y=percent)) + 
   geom_line() +
@@ -178,30 +284,26 @@ ggplot(perc_data, aes(x=PC, y=percent)) +
 ```{r}
 
 #2. The data
-pr.iris$x #this data does not give us the categories, we can add them
-pca_data <- data.frame(pr.iris$x, Species=dt_melt$variable)
 
+pca_data <- data.frame(pca_india$x, category=dt_melt$variable)
 
-#We can use this to inspect the PC1 and 2 across species
-ggplot(pca_data, aes(x=PC1, y=PC2, color=Species)) + geom_point()
-#How about PC2 and PC3?
-ggplot(pca_data, aes(x=PC2, y=PC3, color=Species)) + geom_point()
+# We can use this to inspect the PC1 and 2 across species
+ggplot(pca_data, aes(x=PC1, y=PC2)) + geom_point()
 
 ```
 
 
-```{r}
+```{r echo=FALSE,fig.width=16,fig.height=10}
 #You can simply create this using biplot as well 
-biplot(pr.iris)
-
+biplot(pca_india)
 ```
 
 
 ```{r}
 
 #3. The rotation matrix.
-pr.iris$rotation
-rotation_data <- data.table(pr.iris$rotation, variable=row.names(pr.iris$rotation))
+pca_india$rotation
+rotation_data <- data.table(pca_india$rotation, variable=row.names(pca_india$rotation))
 ggplot(rotation_data) + 
   geom_segment(aes(xend=PC1, yend=PC2), x=0, y=0, arrow=arrow(length = unit(0.05, "inches"), type = "closed")) + 
   geom_text(aes(x=PC1, y=PC2, label=variable), hjust=0, size=3, color='red') + 
@@ -213,6 +315,64 @@ ggplot(rotation_data) +
 
 
 ```{r}
+year_list <- india2[india2$IndicatorCode=='SL.EMP.1524.SP.MA.ZS']$Year
+dt
+dt2 <- as.data.table(filter(dt, Year %in% year_list) )
+
+
+
+v2 <- list(india2[IndicatorCode==factor_list[6]]$Value)
+dt2[, employment := v2]
+
+cols <- c("employment")
+
+dt2<- dt2[, (cols) := lapply(.SD, function(x) (x-mean(x))/sd(x) ),.SDcols = cols ]
+
+dt2
+```
+
+
+```{r}
+
+
+pca_india <- prcomp(x = dt2[,c(1,2,3,4,7)], scale = TRUE, center = TRUE)
+pca_india
+
+```
+
+
+```{r}
+
+#1. The standard deviations:
+pr_var = pca_india$sdev^2
+
+pve = 100 * (pr_var / sum(pr_var))
+perc_data = data.table(percent=pve, PC=1:length(pve))
+ggplot(perc_data, aes(x=PC, y=percent)) + 
+  geom_line() +
+  geom_text(aes(label=round(percent, 2)), size=4, vjust=-.5) +
+  ylab("Proportion of Variance Explained\n") +
+  xlab("Principle Component")
+
+```
+
+
+```{r echo=FALSE,fig.width=8,fig.height=7}
+
+biplot(pca_india)
+```
+
+
+```{r}
+dt2
+```
+
+
+```{r}
+
+model <- lm(employment ~ gross_cap_gdp + gross_consumption + gdp_at_market_prices + export_lcu, dt2)
+get_regression_table(model)
+
 ```
 
 
